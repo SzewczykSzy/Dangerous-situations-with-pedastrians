@@ -1,0 +1,6 @@
+datasets/
+results_mp4/
+img_sample/
+*.docx
+.venv/
+weights/
