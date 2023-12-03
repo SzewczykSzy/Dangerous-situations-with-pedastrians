@@ -11,9 +11,13 @@ from ouster.client.data import LidarScan
 from ultralytics import YOLO
 from contextlib import closing
 from collections import defaultdict
+from functions.filters import kalman_filter
+from functions.equations import danger_sit
 
 
-def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict, output_dict:dict, model:YOLO) -> None:
+def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict, output_dict:dict, 
+              model:YOLO, track_history:defaultdict, kalman_history:dict, track_history_filtered_x:dict, 
+              track_history_filtered_y:dict, vid_writer:cv2.VideoWriter) -> None:
     for scan in scans:
         # Create signal image
         sig_field = scan.field(client.ChanField.SIGNAL)
@@ -76,7 +80,7 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
                 vy_0 = (track[1][1] - y_0)/0.1
                 value = track_history_filtered_x.get(id)
 
-                kalman_output = kalman_history[id]
+                # kalman_output = kalman_history[id]
 
                 # initialization of KalmanFilter object
                 if value is None:
@@ -97,21 +101,18 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
                 out_x = track_filtered_x.x
                 out_y = track_filtered_y.x
 
-                number_of_detections += 1
-                sum_of_accelerations += (track_filtered_x.x_post[1][0] - track_filtered_x.x_prior[1][0])/dt
+                # kalman_output.append([out_x[0][0], out_x[1][0], idx])
 
-                kalman_output.append([out_x[0][0], out_x[1][0], idx])
-
-                out, distance = danger_sit(out_x, out_y, id)
+                out, distance = danger_sit(track_filtered_x, track_filtered_y, id)
             # ------------------------------------------------KALMAN--------------------------------------------------------------------------
                 if out > OUTPUT:
                     OUTPUT = out
 
-            cv2.rectangle(combined_img, (box[0], box[1]), (box[2], box[3]), COLORS_dict[OUTPUT], 2)
+            cv2.rectangle(combined_img, (box[0], box[1]), (box[2], box[3]), colors_dict[OUTPUT], 2)
             cv2.rectangle(combined_img, (box[0], box[1]+2), (box[0]+160, box[1]-12), (255, 255, 255), -1)
             cv2.putText(combined_img, f"Id {id}; dist: {distance:0.2f} m", (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-        cv2.putText(combined_img, f"{OUTPUT_dict[OUTPUT]}", (470, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS_dict[OUTPUT], 2)
+        cv2.putText(combined_img, f"{output_dict[OUTPUT]}", (470, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors_dict[OUTPUT], 2)
 
         # Stream results
         if True:
@@ -148,17 +149,21 @@ def main():
     xyz_lut = client.XYZLut(metadata) #call cartesian lookup table
 
     # Store the track history
-    track_history = defaultdict(lambda: [])
+    track_history = defaultdict(lambda: [])     # dictionary: {key=id, value=[xyz_val_0, ... ,xyz_val_99]}
+    kalman_history = defaultdict(lambda: [])    # dictionary: {key=id, value=[[out_x.x, idx]]}, out_x.x=[[x_predicted],[vx_predicted]]
+    
     track_history_filtered_x = {}
     track_history_filtered_y = {}
-    x_speed_history = []
 
     with closing(Scans(pcap_file)) as scans:
 
         save_path = "C:/Users/szyme/Ouster/YOLOv8/results_mp4"
         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
-        main_loop(scans=scans, xyz_lut=xyz_lut, metadata=metadata, colors_dict=COLORS_dict,output_dict=OUTPUT_dict, model=model)
+        main_loop(scans=scans, xyz_lut=xyz_lut, metadata=metadata, colors_dict=COLORS_dict,output_dict=OUTPUT_dict, 
+                  model=model, track_history=track_history, kalman_history=kalman_history, 
+                  track_history_filtered_x=track_history_filtered_x, track_history_filtered_y=track_history_filtered_y, 
+                  vid_writer=vid_writer)
 
         vid_writer.release()
         cv2.destroyAllWindows()

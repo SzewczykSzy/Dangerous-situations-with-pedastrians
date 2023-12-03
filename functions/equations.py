@@ -1,6 +1,7 @@
 import numpy as np
-from conditional_algorithm import cond_algorithm
+from functions.conditional_algorithm import cond_algorithm
 from filterpy.kalman import KalmanFilter
+import math
 
 EPS = np.finfo(float).eps
 DT = 0.1
@@ -37,7 +38,8 @@ def danger_sit(out_x:KalmanFilter, out_y:KalmanFilter, id:int) -> tuple:
     l_s = (2-b)/a       # mniejsze od 5 i większe od -2 (y) 
     r_s = (-2-b)/a      #           -||-
 
-    f_s =  a*5 + b      # mniejsze od 3 i większe od -3
+    f_s =  a*5 + b      # mniejsze od 2 i większe od -2
     b_s = a*(-2) + b    #           -||- 
 
-    return cond_algorithm(left_side=l_s, right_side=r_s, front_side=f_s, back_side=b_s, x_pos=x_pos, x_velocity=x_v, y_pos=y_pos, y_velocity=y_v)
+    return cond_algorithm(left_side=l_s, right_side=r_s, front_side=f_s, back_side=b_s, 
+                          x_pos=x_pos, x_velocity=x_v, y_pos=y_pos, y_velocity=y_v, distance=distance)
