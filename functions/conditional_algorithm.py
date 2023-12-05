@@ -20,9 +20,9 @@ def cond_algorithm(left_side:float, right_side:float, front_side:float, back_sid
         else:
             if 0 < x_pos < 30:
                 if -7 < y_pos < 7:
-                    if x_velocity > -1:
+                    if x_velocity > -2:
                         return 1, distance
-                    elif x_velocity > -3:
+                    elif x_velocity > -4:
                         return 2, distance
                     else:
                         # print(f"BREAK: {id}\n")

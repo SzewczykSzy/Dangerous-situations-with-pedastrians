@@ -16,37 +16,37 @@ from functions.equations import danger_sit
 
 
 def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict, output_dict:dict, 
-              model:YOLO, track_history:defaultdict, kalman_history:dict, track_history_filtered_x:dict, 
+              model:YOLO, track_history:defaultdict, track_history_filtered_x:dict, 
               track_history_filtered_y:dict, vid_writer:cv2.VideoWriter) -> None:
+    
+    # iteration through all scans
     for scan in scans:
         # Create signal image
         sig_field = scan.field(client.ChanField.SIGNAL)
         sig_destaggered = destagger(metadata, sig_field)
     
-        # Define a scaling factor based on the values (adjust this as needed)
+        # Define a scaling factor based on the values
         scaling_factor = 0.004
-        scaled_arr = sig_destaggered / (0.5 + scaling_factor * sig_destaggered) # BASIC
+        scaled_arr = sig_destaggered / (0.5 + scaling_factor * sig_destaggered)
 
         # Convert to uint8 and create 3 dim matrix
         signal_image = scaled_arr.astype(np.uint8)
         combined_img = np.dstack((signal_image, signal_image, signal_image))
 
-        # Create range image (for localization, distance measurement)
-        range_field = scan.field(client.ChanField.RANGE)
-        range_image = client.destagger(metadata, range_field)
-
-        # xyz_destaggered = xyzlut(range_field)
-        xyz_destaggered = client.destagger(metadata, xyz_lut(scan)) #to adjust for the pixel staggering that is inherent to Ouster lidar sensor raw data
+        # To adjust for the pixel staggering that is inherent to Ouster lidar sensor raw data
+        xyz_destaggered = client.destagger(metadata, xyz_lut(scan))
 
         # Predict and track
-        results = model.track(source=combined_img, persist=True, imgsz=1024, tracker='bytetrack.yaml')
+        results = model.track(source=combined_img, persist=True, imgsz=1024, tracker='bytetrack.yaml', verbose=False)
 
+        # Get predict boxes
         boxes = results[0].boxes.xyxy.cpu().numpy().astype(int)
 
         if (results[0].boxes.id == None):
             ids = ''
         else:
             ids = results[0].boxes.id.cpu().numpy().astype(int)
+
 
         OUTPUT = 0
         color = (0, 255, 0)
@@ -61,12 +61,9 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
 
             track = track_history[id] #save the (x,y,z) coordinates for distance calculation
 
-            # Czasem zwraca wartość 0, jeśli tak, to podstawiam poprzednią wartość
-            if len(track) > 0:
-                if abs(xyz_val[0] - track[-1][0]) > 4 or abs(xyz_val[1] - track[-1][1]) > 4:
-                    track.append(track[-1])
-                else:
-                    track.append(xyz_val)
+            # First small filter, error with returning 0
+            if xyz_val[0] == 0 or xyz_val[1] == 0:
+                track.append(track[-1])
             else:
                 track.append(xyz_val)
 
@@ -79,8 +76,6 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
                 vx_0 = (track[1][0] - x_0)/0.1
                 vy_0 = (track[1][1] - y_0)/0.1
                 value = track_history_filtered_x.get(id)
-
-                # kalman_output = kalman_history[id]
 
                 # initialization of KalmanFilter object
                 if value is None:
@@ -100,8 +95,6 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
 
                 out_x = track_filtered_x.x
                 out_y = track_filtered_y.x
-
-                # kalman_output.append([out_x[0][0], out_x[1][0], idx])
 
                 out, distance = danger_sit(track_filtered_x, track_filtered_y, id)
             # ------------------------------------------------KALMAN--------------------------------------------------------------------------
@@ -150,10 +143,9 @@ def main():
 
     # Store the track history
     track_history = defaultdict(lambda: [])     # dictionary: {key=id, value=[xyz_val_0, ... ,xyz_val_99]}
-    kalman_history = defaultdict(lambda: [])    # dictionary: {key=id, value=[[out_x.x, idx]]}, out_x.x=[[x_predicted],[vx_predicted]]
     
-    track_history_filtered_x = {}
-    track_history_filtered_y = {}
+    track_history_filtered_x = {}   # dictionary: {key=id, value=kalman_filter(init=0, v_init=0)}
+    track_history_filtered_y = {}   # dictionary: {key=id, value=kalman_filter(init=0, v_init=0)}
 
     with closing(Scans(pcap_file)) as scans:
 
@@ -161,9 +153,8 @@ def main():
         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
         main_loop(scans=scans, xyz_lut=xyz_lut, metadata=metadata, colors_dict=COLORS_dict,output_dict=OUTPUT_dict, 
-                  model=model, track_history=track_history, kalman_history=kalman_history, 
-                  track_history_filtered_x=track_history_filtered_x, track_history_filtered_y=track_history_filtered_y, 
-                  vid_writer=vid_writer)
+                  model=model, track_history=track_history, track_history_filtered_x=track_history_filtered_x, 
+                  track_history_filtered_y=track_history_filtered_y, vid_writer=vid_writer)
 
         vid_writer.release()
         cv2.destroyAllWindows()
