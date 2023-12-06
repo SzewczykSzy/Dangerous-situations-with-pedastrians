@@ -35,10 +35,10 @@ def danger_sit(out_x:KalmanFilter, out_y:KalmanFilter, id:int) -> tuple:
     if a == 0:
         a = EPS
 
-    l_s = (2-b)/a       # mniejsze od 5 i większe od -2 (y) 
+    l_s = (2-b)/a       # lower than 5 and greater than -2 
     r_s = (-2-b)/a      #           -||-
 
-    f_s =  a*5 + b      # mniejsze od 2 i większe od -2
+    f_s =  a*5 + b      # lower than 2 and greater than -2
     b_s = a*(-2) + b    #           -||- 
 
     return cond_algorithm(left_side=l_s, right_side=r_s, front_side=f_s, back_side=b_s, 

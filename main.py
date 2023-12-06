@@ -15,7 +15,7 @@ from functions.filters import kalman_filter
 from functions.equations import danger_sit
 
 
-def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict, output_dict:dict, 
+def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, output_dict:dict, 
               model:YOLO, track_history:defaultdict, track_history_filtered_x:dict, 
               track_history_filtered_y:dict, vid_writer:cv2.VideoWriter) -> None:
     
@@ -47,9 +47,7 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
         else:
             ids = results[0].boxes.id.cpu().numpy().astype(int)
 
-
-        OUTPUT = 0
-        color = (0, 255, 0)
+        priority = 3
         distance = 0
 
         # iteration through identified objects
@@ -62,23 +60,26 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
             track = track_history[id] #save the (x,y,z) coordinates for distance calculation
 
             # First small filter, error with returning 0
-            if xyz_val[0] == 0 or xyz_val[1] == 0:
-                track.append(track[-1])
+            if len(track) > 0:
+                if xyz_val[0] == 0 or xyz_val[1] == 0:
+                    track.append(track[-1])
+                else:
+                    track.append(xyz_val)
             else:
                 track.append(xyz_val)
 
-            # ------------------------------------------------KALMAN--------------------------------------------------------------------------
-            # Sprawdź, czy id w słowniku już istnieje, jeśli nie, to tworzy obiekti KalmanFilter z wartościami początkowymi
+            # ------------------------------------------------KALMAN------------------------------------------
             if len(track) >= 2:
                 
-                x_0 = track[0][0]
-                y_0 = track[0][1]
-                vx_0 = (track[1][0] - x_0)/0.1
-                vy_0 = (track[1][1] - y_0)/0.1
                 value = track_history_filtered_x.get(id)
 
                 # initialization of KalmanFilter object
                 if value is None:
+                    x_0 = track[0][0]
+                    y_0 = track[0][1]
+                    vx_0 = (track[1][0] - x_0)/0.1
+                    vy_0 = (track[1][1] - y_0)/0.1
+                    
                     track_history_filtered_x[id] = kalman_filter(init=x_0, v_init=vx_0)
                     track_history_filtered_y[id] = kalman_filter(init=y_0, v_init=vy_0)
                     track_filtered_x = track_history_filtered_x[id]
@@ -93,19 +94,19 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
                 track_filtered_x.update([track[-1][0]])
                 track_filtered_y.update([track[-1][1]])
 
-                out_x = track_filtered_x.x
-                out_y = track_filtered_y.x
+                # out_x = track_filtered_x.x
+                # out_y = track_filtered_y.x
 
                 out, distance = danger_sit(track_filtered_x, track_filtered_y, id)
             # ------------------------------------------------KALMAN--------------------------------------------------------------------------
-                if out > OUTPUT:
-                    OUTPUT = out
+                if out < priority:
+                    priority = out
 
-            cv2.rectangle(combined_img, (box[0], box[1]), (box[2], box[3]), colors_dict[OUTPUT], 2)
+            cv2.rectangle(combined_img, (box[0], box[1]), (box[2], box[3]), output_dict[priority][1], 2)
             cv2.rectangle(combined_img, (box[0], box[1]+2), (box[0]+160, box[1]-12), (255, 255, 255), -1)
             cv2.putText(combined_img, f"Id {id}; dist: {distance:0.2f} m", (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-        cv2.putText(combined_img, f"{output_dict[OUTPUT]}", (470, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors_dict[OUTPUT], 2)
+        cv2.putText(combined_img, f"{output_dict[priority][0]}", (470, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, output_dict[priority][1], 2)
 
         # Stream results
         if True:
@@ -119,11 +120,11 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, colors_dict:dict
 
 
 def main():
-    OUTPUT_dict = {0:"GO AHEAD", 1:"BE CAREFUL", 2:"SLOW DOWN", 3:"BREAK", 4:"MISTAkE"}
-    COLORS_dict = {0:(0, 255, 0), 1:(0, 155, 100), 2: (0, 100, 155), 3:(0, 0, 255), 4:(255, 0, 0)}
+    OUTPUT_dict = {3:["GO AHEAD", (0, 255, 0)], 2:["BE CAREFUL", (0, 155, 100)], 1:["SLOW DOWN", (0, 100, 155)], 
+                   0:["BREAK", (0, 0, 255)]}
 
     # Load the YOLOv8 model
-    model = YOLO('weights/best_s.pt')
+    model = YOLO('weights/best_3000_m.pt')
 
     # Paths to pcap and json files
     metadata_path = "C:/Users/szyme/Ouster/data/PKR_test1/test4.json"
@@ -152,7 +153,7 @@ def main():
         save_path = "C:/Users/szyme/Ouster/YOLOv8/results_mp4"
         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
-        main_loop(scans=scans, xyz_lut=xyz_lut, metadata=metadata, colors_dict=COLORS_dict,output_dict=OUTPUT_dict, 
+        main_loop(scans=scans, xyz_lut=xyz_lut, metadata=metadata, output_dict=OUTPUT_dict, 
                   model=model, track_history=track_history, track_history_filtered_x=track_history_filtered_x, 
                   track_history_filtered_y=track_history_filtered_y, vid_writer=vid_writer)
 
