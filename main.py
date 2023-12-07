@@ -94,9 +94,6 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, output_dict:dict
                 track_filtered_x.update([track[-1][0]])
                 track_filtered_y.update([track[-1][1]])
 
-                # out_x = track_filtered_x.x
-                # out_y = track_filtered_y.x
-
                 out, distance = danger_sit(track_filtered_x, track_filtered_y, id)
             # ------------------------------------------------KALMAN--------------------------------------------------------------------------
                 if out < priority:
@@ -150,7 +147,7 @@ def main():
 
     with closing(Scans(pcap_file)) as scans:
 
-        save_path = "C:/Users/szyme/Ouster/YOLOv8/results_mp4"
+        save_path = "C:/Users/szyme/Ouster/Dangerous-situations-with-pedastrians/results_mp4/wynik.mp4"
         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
         main_loop(scans=scans, xyz_lut=xyz_lut, metadata=metadata, output_dict=OUTPUT_dict, 

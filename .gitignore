@@ -4,3 +4,4 @@ img_sample/
 *.docx
 .venv/
 weights/
+tests/runs/detect/
