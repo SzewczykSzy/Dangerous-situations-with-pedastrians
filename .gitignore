@@ -5,3 +5,4 @@ img_sample/
 .venv/
 weights/
 tests/runs/detect/
+tests/groundtruthing_labels/
