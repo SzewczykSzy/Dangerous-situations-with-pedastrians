@@ -43,6 +43,7 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, output_dict:dict
         boxes = results[0].boxes.xyxy.cpu().numpy().astype(int)
 
         if (results[0].boxes.id == None):
+
             ids = ''
         else:
             ids = results[0].boxes.id.cpu().numpy().astype(int)
@@ -121,7 +122,7 @@ def main():
                    0:["BREAK", (0, 0, 255)]}
 
     # Load the YOLOv8 model
-    model = YOLO('weights/best_3000_m.pt')
+    model = YOLO('weights/best_3000_s_100.pt')
 
     # Paths to pcap and json files
     metadata_path = "C:/Users/szyme/Ouster/data/PKR_test1/test4.json"
