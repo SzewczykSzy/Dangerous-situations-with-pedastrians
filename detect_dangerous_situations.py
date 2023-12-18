@@ -8,6 +8,7 @@ Usage:
 import sys
 import os
 import argparse
+from functions.read_pcap import ReadPcap, TrackHistory, TrackXY, SingleFrame
 
 
 def parse_opt():
@@ -33,10 +34,27 @@ def run(weights='weights/yolov5s.pt',
         metadata_path='data/json/example.json',
         imgsz = 1024,
         device = 'cpu',
-        save_video = 1
+        save_video_path = 'results_mp4/result.mp4',
+        save_video = 1,
         ):
     
-    pass
+    variables = ReadPcap(weights, metadata_path, pcap_path)
+    
+    fps = int(str(variables.metadata.mode)[-2:])
+    width = int(str(variables.metadata.mode)[:4])
+    height = int(str(variables.metadata.prod_line)[5:])
+
+    with closing(Scans(variables.pcap_file)) as scans:
+        save_path = save_video_path
+        vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+
+        for scan in scans:
+            frame = SingleFrame(scan)
+            combined_img = frame.get_combined_img()
+            xyz_destaggered = frame.get_xyz_destaggered()
+
+        vid_writer.release()
+        cv2.destroyAllWindows()
 
 def main(opt):
     run(**vars(opt))
