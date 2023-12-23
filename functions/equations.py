@@ -19,11 +19,11 @@ def linear_func_coefficients(p1:tuple, p2:tuple) -> tuple:
     return a, b
 
 
-def danger_sit(out_x:KalmanFilter, out_y:KalmanFilter, id:int) -> tuple:
-    x_pos = out_x.x[0][0]
-    y_pos = out_y.x[0][0]
-    x_v = out_x.x[1][0]
-    y_v = out_y.x[1][0]
+def danger_sit(out_x:list, out_y:list, id:int) -> tuple:
+    x_pos = out_x[0][0]
+    y_pos = out_y[0][0]
+    x_v = out_x[1][0]
+    y_v = out_y[1][0]
 
     distance = math.sqrt(x_pos**2 + y_pos**2) - 1.5 # -1.5 because of the fact, that LiDAR is placed in the center of a car
 

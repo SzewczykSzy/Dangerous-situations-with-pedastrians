@@ -12,7 +12,6 @@ from ultralytics import YOLO
 from contextlib import closing
 from collections import defaultdict
 from functions.filters import kalman_filter
-from functions.equations import danger_sit
 
 class SingleFrame():
     def __init__(self, scan):
@@ -33,24 +32,24 @@ class SingleFrame():
 
 class TrackXY():
     def __init__(self):
-        self.filtered_x = {}
-        self.filtered_y = {}
+        self.x = {}
+        self.y = {}
 
     def update(self, track):
-        value = self.filtered_x.get(id)
+        value = self.x.get(id)
         if value is None:
             x_0 = track[0][0]
             y_0 = track[0][1]
             vx_0 = (track[1][0] - x_0)/0.1
             vy_0 = (track[1][1] - y_0)/0.1
             
-            self.filtered_x[id] = kalman_filter(init=x_0, v_init=vx_0)
-            self.filtered_y[id] = kalman_filter(init=y_0, v_init=vy_0)
-            x = self.filtered_x[id]
-            y = self.filtered_y[id]
+            self.x[id] = kalman_filter(init=x_0, v_init=vx_0)
+            self.y[id] = kalman_filter(init=y_0, v_init=vy_0)
+            x = self.x[id]
+            y = self.y[id]
         else:
-            x = self.filtered_x[id]
-            y = self.filtered_y[id]
+            x = self.x[id]
+            y = self.y[id]
         x.predict()
         y.predict()
         x.update([track[-1][0]])
@@ -84,4 +83,5 @@ class ReadPcap():
         self.metadata = client.SensorInfo(open(self.metadata_path, 'r').read())
         self.pcap_file = pcap.Pcap(self.pcap_path, self.metadata)
         self.xyz_lut = client.XYZLut(self.metadata)
-        
+        self.track_history = TrackHistory()
+        self.filtered_track = TrackXY()
