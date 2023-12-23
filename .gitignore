@@ -7,3 +7,4 @@ weights/*
 tests/runs/detect/*
 tests/groundtruthing_labels/*
 __pycache__/
+functions/__pycache__
