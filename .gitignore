@@ -3,7 +3,7 @@ results_mp4/wynik.mp4
 img_sample/
 *.docx
 .venv/
-weights/
-tests/runs/detect/
-tests/groundtruthing_labels/
+weights/*
+tests/runs/detect/*
+tests/groundtruthing_labels/*
 __pycache__/
