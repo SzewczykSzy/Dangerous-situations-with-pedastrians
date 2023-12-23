@@ -36,7 +36,6 @@ class YOLOModel:
 
 class DataHandler:
     def __init__(self, metadata_path, pcap_path):
-        # Load metadata and pcap data
         self.metadata = SensorInfo(open(metadata_path, 'r').read())
         self.pcap_file = pcap.Pcap(pcap_path, self.metadata)
         self.xyz_lut = client.XYZLut(self.metadata)
@@ -47,20 +46,16 @@ class DataHandler:
                    0:["BREAK", (0, 0, 255)]}
     
     def get_metadata(self):
-        # Retrive metadata
         return self.metadata
 
     def get_scans(self):
-        # Retrieve scans and other necessary data
         scans = Scans(self.pcap_file)
         return scans
 
     def get_output_dict(self):
-        # Retrieve scans and other necessary data
         return self.output_dict
 
     def get_xyz_lut(self):
-        # Retrieve scans and other necessary data
         return self.xyz_lut
     
     def get_video_params(self):
@@ -68,7 +63,6 @@ class DataHandler:
 
 class HistoryTracker:
     def __init__(self):
-        # Initialize tracking parameters and structures
         self.history = defaultdict(lambda: [])
 
     def update_history(self, id, xyz_val):
@@ -140,7 +134,6 @@ class SingleFrame:
 
 class VideoProcessor:
     def __init__(self, metadata, video_params, save=0, save_path=''):
-        # Initialize video writer and properties
         self.metadata = metadata
         self.save = save
         if self.save:
@@ -183,20 +176,3 @@ class VideoProcessor:
 
         if self.save:
             self.vid_writer.write(combined_img)
-
-
-
-# Usage
-if __name__ == "__main__":
-    yolo_model = YOLOModel('weights/best_3000_s_100.pt')
-    data_handler = DataHandler("metadata_path", "pcap_path")
-    video_processor = VideoProcessor("save_path", fps, width, height)
-    tracker = Tracker()
-
-    metadata = data_handler.get_metadata()
-    scans = data_handler.get_scans()
-
-    for scan in scans:
-        # Processing and tracking
-        video_processor.process_video(scan, yolo_model, tracker.track_history, xyz_lut, output_dict)
-        tracker.update_track(track_history, track_history_filtered_x, track_history_filtered_y)

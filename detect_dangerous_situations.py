@@ -2,9 +2,12 @@
 Run dangerous situation detection on pcap file
 
 Usage:
-    TODO:
-                                                             
+    'python ./detect_dangerous_situations.py --weights weights/best_3000_s_100.pt 
+    --pcap-path ../data/PKR_test1/test4.pcap --metadata-path ../data/PKR_test1/test4.json 
+    --tracker ./trackers/bytetrack.yaml --imgsz 1024 --device cpu  --save=0 
+    --save-video-path C:/Users/user/Ouster/Dangerous-situations-with-pedastrians/results_mp4/result.mp4'                                                       
 """
+
 import sys
 import os
 import argparse
@@ -50,7 +53,6 @@ def run(weights='weights/yolov5s.pt',
     metadata = data_handler.get_metadata()
     output_dict = data_handler.get_output_dict()
     video_params = data_handler.get_video_params()
-    # xyz_lut = data_handler.get_xyz_lut()
 
     video_processor = VideoProcessor(metadata=metadata, video_params=video_params, save=save, save_path=save_video_path)
     history = HistoryTracker()
