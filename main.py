@@ -95,7 +95,7 @@ def main_loop(scans:Scans, xyz_lut:XYZLut, metadata:SensorInfo, output_dict:dict
                 track_filtered_x.update([track[-1][0]])
                 track_filtered_y.update([track[-1][1]])
 
-                out, distance = danger_sit(track_filtered_x, track_filtered_y, id)
+                out, distance = danger_sit(track_filtered_x.x, track_filtered_y.x, id)
             # ------------------------------------------------KALMAN--------------------------------------------------------------------------
                 if out < priority:
                     priority = out
