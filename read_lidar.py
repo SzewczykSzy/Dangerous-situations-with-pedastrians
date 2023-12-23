@@ -18,7 +18,7 @@ from functions.equations import danger_sit
 
 
 class YOLOModel:
-    def __init__(self, weights_path:str, persist, imgsz, tracker_path, verbose):
+    def __init__(self, weights_path:str='./weights/best_3000_s_100.pt', imgsz=1024, tracker_path='trackers/bytetrack.yaml', persist=True, verbose=False):
         self.model = YOLO(weights_path)
         self.persist = persist
         self.imgsz = imgsz
@@ -40,9 +40,9 @@ class DataHandler:
         self.metadata = SensorInfo(open(metadata_path, 'r').read())
         self.pcap_file = pcap.Pcap(pcap_path, self.metadata)
         self.xyz_lut = client.XYZLut(self.metadata)
-        self.fps = int(str(metadata.mode)[-2:])
-        self.width = int(str(metadata.mode)[:4])
-        self.height = int(str(metadata.prod_line)[5:])
+        self.fps = int(str(self.metadata.mode)[-2:])
+        self.width = int(str(self.metadata.mode)[:4])
+        self.height = int(str(self.metadata.prod_line)[5:])
         self.output_dict = {3:["GO AHEAD", (0, 255, 0)], 2:["BE CAREFUL", (0, 155, 100)], 1:["SLOW DOWN", (0, 100, 155)], 
                    0:["BREAK", (0, 0, 255)]}
     
@@ -66,53 +66,6 @@ class DataHandler:
     def get_video_params(self):
         return self.fps, self.width, self.height
 
-class VideoProcessor:
-    def __init__(self, metadata, save=False, save_path='', video_params):
-        # Initialize video writer and properties
-        self.metadata = metadata
-        self.save = save
-        if self.save:
-            self.vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (self.width, self.height))
-
-    def andlnalin(self):
-        pass
-
-    def process_video(self, scan:LidarScan, model:YOLOModel, track_history:HistoryTracker, kalman:HistoryTrackerXY, xyz_lut:XYZLut, output_dict:dict, ):
-        # Video processing and visualization
-        frame = SingleFrame(scan)
-        combined_img = frame.get_combined_img(self.metadata)
-        xyz_destaggered = frame.get_xyz_destaggered(self.metadata)
-        boxes, ids = model.track(source=combined_img)
-        priority = 3
-        distance = 0
-        for box, id in zip(boxes, ids):
-            center_x, center_y = int((box[0] + box[2])/2), int((box[1] + box[3])/2)
-            xyz_val = xyz_destaggered[(center_y, center_x)]
-            track_history.update_history(id=id, xyz_val=xyz_val)
-            track = track_history.get_track(id)
-            if len(track) >= 2:
-                kalman.update(history[id], id)
-
-                out, distance = danger_sit(track_history.get_x_data(), track_history.get_y_data(), id)
-
-                if out < priority:
-                    priority = out
-            cv2.rectangle(combined_img, (box[0], box[1]), (box[2], box[3]), output_dict[priority][1], 2)
-            cv2.rectangle(combined_img, (box[0], box[1]+2), (box[0]+160, box[1]-12), (255, 255, 255), -1)
-            cv2.putText(combined_img, f"Id {id}; dist: {distance:0.2f} m", (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-        cv2.putText(combined_img, f"{output_dict[priority][0]}", (470, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, output_dict[priority][1], 2)
-        
-        # Stream results
-        if True:
-            cv2.imshow("YOLOv8 Tracking", combined_img)
-            cv2.waitKey(1)  # 1 millisecond
-
-        vid_writer.write(combined_img)
-
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-
 class HistoryTracker:
     def __init__(self):
         # Initialize tracking parameters and structures
@@ -135,7 +88,7 @@ class HistoryTracker:
         return self.history[id]
 
 
-class HistoryTrackerXY():
+class HistoryTrackerXY:
     def __init__(self):
         self.x = {}
         self.y = {}
@@ -160,14 +113,14 @@ class HistoryTrackerXY():
         x.update([track[-1][0]])
         y.update([track[-1][1]])
 
-    def get_x_data():
-        return self.x.x
+    def get_x_data(self, id):
+        return self.x[id].x
     
-    def get_y_data():
-        return self.y.x
+    def get_y_data(self, id):
+        return self.y[id].x
 
 
-class SingleFrame():
+class SingleFrame:
     def __init__(self, scan):
         self.sig_field = scan.field(client.ChanField.SIGNAL)
 
@@ -180,9 +133,57 @@ class SingleFrame():
         combined_img = np.dstack((signal_image, signal_image, signal_image))
         return combined_img
 
-    def get_xyz_destaggered(self, metadata):
+    def get_xyz_destaggered(self, metadata, xyz_lut, scan):
         xyz_destaggered = client.destagger(metadata, xyz_lut(scan))
         return xyz_destaggered
+
+
+class VideoProcessor:
+    def __init__(self, metadata, video_params, save=0, save_path=''):
+        # Initialize video writer and properties
+        self.metadata = metadata
+        self.save = save
+        if self.save:
+            fps = video_params[0]
+            width = video_params[1]
+            height = video_params[2]
+            self.vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+
+    def close(self):
+        if self.save:
+            self.vid_writer.release()
+        cv2.destroyAllWindows()
+
+    def process_video(self, scan:LidarScan, model:YOLOModel, track_history:HistoryTracker, kalman:HistoryTrackerXY, xyz_lut:XYZLut, output_dict:dict, ):
+        frame = SingleFrame(scan)
+        combined_img = frame.get_combined_img(self.metadata)
+        xyz_destaggered = frame.get_xyz_destaggered(self.metadata, xyz_lut, scan)
+        boxes, ids = model.track(source=combined_img)
+        priority = 3
+        distance = 0
+        for box, id in zip(boxes, ids):
+            center_x, center_y = int((box[0] + box[2])/2), int((box[1] + box[3])/2)
+            xyz_val = xyz_destaggered[(center_y, center_x)]
+            track_history.update_history(id=id, xyz_val=xyz_val)
+            track = track_history.get_track(id)
+            if len(track) >= 2:
+                kalman.update(track, id)
+
+                out, distance = danger_sit(kalman.get_x_data(id), kalman.get_y_data(id), id)
+
+                if out < priority:
+                    priority = out
+            cv2.rectangle(combined_img, (box[0], box[1]), (box[2], box[3]), output_dict[priority][1], 2)
+            cv2.rectangle(combined_img, (box[0], box[1]+2), (box[0]+160, box[1]-12), (255, 255, 255), -1)
+            cv2.putText(combined_img, f"Id {id}; dist: {distance:0.2f} m", (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        cv2.putText(combined_img, f"{output_dict[priority][0]}", (470, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, output_dict[priority][1], 2)
+        
+        cv2.imshow("YOLOv8 Tracking", combined_img)
+        cv2.waitKey(1)  # 1 millisecond
+
+        if self.save:
+            self.vid_writer.write(combined_img)
+
 
 
 # Usage

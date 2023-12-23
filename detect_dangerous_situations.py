@@ -21,36 +21,38 @@ def parse_opt():
     parser.add_argument("--tracker", type=str, help="Path to tracker YAML", required=True)
     parser.add_argument("--imgsz", type=int, help="Size of single frame", required=True)
     parser.add_argument("--device", type=str, default='cpu', help="Cuda device, i.e. 0 or 0,1,2,3 or cpu")
+    parser.add_argument("--save", type=int, default=0, help="If want to save result video: 1, else 0")
     parser.add_argument("--save-video-path", type=str, default='', help="Path for saving result video, i.e 'C:/Users/account/res.mp4'")
-    parser.add_argument("--imgsz", action="store_true", help="View detected images")
     args = parser.parse_args()
 
-    print("Class Index:", args.class_)
     print("Weights Path:", args.weights)
-    print("Confidence Threshold:", args.conf_thres)
-    print("Source PCAP Path:", args.source) 
-    print("Metadata Path:", args.metadata_path)
-    print("View Image:", args.view_img)
+    print("Pcap file Path:", args.pcap_path)
+    print("Metadata file Path:", args.metadata_path) 
+    print("Tracker Path:", args.tracker)
+    print("Image Size:", args.imgsz)
+    print("Device:", args.device)
+    print("Save:", args.save)
+    print("Video path to save:", args.save_video_path)
     return args
 
-def run(save_video_path,
-        weights='weights/yolov5s.pt',
+def run(weights='weights/yolov5s.pt',
         pcap_path='data/pcap/example.pcap',
         metadata_path='data/json/example.json',
         tracker = 'weights/bytetracker.yaml',
         imgsz = 1024,
         device = 'cpu',
-        if_save = False,
+        save = False,
         save_video_path = ''
         ):
 
-    yolo_model = YOLOModel(weights)
+    yolo_model = YOLOModel(weights, imgsz=imgsz)
     data_handler = DataHandler(metadata_path=metadata_path, pcap_path=pcap_path)
     metadata = data_handler.get_metadata()
     output_dict = data_handler.get_output_dict()
     video_params = data_handler.get_video_params()
+    # xyz_lut = data_handler.get_xyz_lut()
 
-    video_processor = VideoProcessor(metadata=metadata, save=if_save, save_path=save_video_path, video_params=video_params)
+    video_processor = VideoProcessor(metadata=metadata, video_params=video_params, save=save, save_path=save_video_path)
     history = HistoryTracker()
     kalman = HistoryTrackerXY()
 
@@ -58,6 +60,9 @@ def run(save_video_path,
     xyz_lut = data_handler.get_xyz_lut()
     for scan in scans:
         video_processor.process_video(scan=scan, model=yolo_model, track_history=history, kalman=kalman, xyz_lut=xyz_lut, output_dict=output_dict)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+    video_processor.close()
 
 
 def main(opt):
