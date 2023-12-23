@@ -6,3 +6,4 @@ img_sample/
 weights/
 tests/runs/detect/
 tests/groundtruthing_labels/
+__pycache__
