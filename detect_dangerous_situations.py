@@ -52,19 +52,31 @@ def run(weights='weights/yolov5s.pt',
     data_handler = DataHandler(metadata_path=metadata_path, pcap_path=pcap_path)
     metadata = data_handler.get_metadata()
     output_dict = data_handler.get_output_dict()
-    video_params = data_handler.get_video_params()
+    fps, width, height = data_handler.get_video_params()
 
-    video_processor = VideoProcessor(metadata=metadata, video_params=video_params, save=save, save_path=save_video_path)
+    video_processor = VideoProcessor(metadata=metadata)
     history = HistoryTracker()
     kalman = HistoryTrackerXY()
 
     scans = data_handler.get_scans()
     xyz_lut = data_handler.get_xyz_lut()
+    if save == 1:
+        vid_writer = cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+
     for scan in scans:
-        video_processor.process_video(scan=scan, model=yolo_model, track_history=history, kalman=kalman, xyz_lut=xyz_lut, output_dict=output_dict)
+        image = video_processor.process_video(scan=scan, model=yolo_model, track_history=history, kalman=kalman, xyz_lut=xyz_lut, output_dict=output_dict)
+        
+        cv2.imshow("YOLOv8 Tracking", image)
+        cv2.waitKey(1)  # 1 millisecond
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
-    video_processor.close()
+
+        if save == 1:
+            vid_writer.write(image)
+
+    if save == 1:    
+        vid_writer.release()
+    cv2.destroyAllWindows()
 
 
 def main(opt):
