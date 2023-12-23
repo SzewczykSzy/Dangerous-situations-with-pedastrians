@@ -4,6 +4,16 @@ from filterpy.common import Q_discrete_white_noise
 
 
 def kalman_filter(init:float=0, v_init:float=0) -> KalmanFilter:
+    """
+    Function implementing initialization of KalmanFilter
+
+    Args:
+        init (float, optional): First X/Y coordinate of pedestrian. Defaults to 0.
+        v_init (float, optional): First X/Y coordinate velocity of pedestrian. Defaults to 0.
+
+    Returns:
+        KalmanFilter: KalmanFilter
+    """
     my_filter = KalmanFilter(dim_x=2, dim_z=1)  # dim_x: size of the state vector
                                                 # dim_z: size of the measurement vector
 

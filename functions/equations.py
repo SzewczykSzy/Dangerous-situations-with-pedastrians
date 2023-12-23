@@ -1,6 +1,5 @@
 import numpy as np
 from functions.conditional_algorithm import cond_algorithm
-from filterpy.kalman import KalmanFilter
 import math
 
 EPS = np.finfo(float).eps
@@ -9,7 +8,14 @@ DT = 0.1
 
 def linear_func_coefficients(p1:tuple, p2:tuple) -> tuple:
     """
-    Funkcja zwracająca współczynniki prostej przechodzącej przez 2 punkty p1 i p2
+    Function calculating line coefficients from two points.
+
+    Args:
+        p1 (tuple): First point (XYZ) that represents pedestrian.
+        p2 (tuple): Second point (XYZ) that represents pedestrian.
+
+    Returns:
+        tuple: Coefficients of the straight line coinciding with the pedestrian speed vector.
     """
     if (p2[0] - p1[0]) == 0:
         a = (p2[1]-p1[1])/(EPS)
@@ -20,6 +26,17 @@ def linear_func_coefficients(p1:tuple, p2:tuple) -> tuple:
 
 
 def danger_sit(out_x:list, out_y:list, id:int) -> tuple:
+    """
+    Function returning priority and distance of situation.
+
+    Args:
+        out_x (list): List including X position and covered distance of pedestrian. 
+        out_y (list): List including Y position and covered distance of pedestrian.
+        id (int): Identification of pedestrian.
+
+    Returns:
+        tuple: Priority and distance to the object. 
+    """
     x_pos = out_x[0][0]
     y_pos = out_y[0][0]
     x_v = out_x[1][0]

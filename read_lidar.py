@@ -1,5 +1,3 @@
-'''
-'''
 import cv2
 import math
 import time
@@ -18,7 +16,20 @@ from functions.equations import danger_sit
 
 
 class YOLOModel:
+    """
+    Class for initialization of YOLO model and results of tracking.
+    """
     def __init__(self, weights_path:str='./weights/best_3000_s_100.pt', imgsz=1024, tracker_path='trackers/bytetrack.yaml', persist=True, verbose=False):
+        """
+        Initialization
+
+        Args:
+            weights_path (str, optional): Path to weights file. Defaults to './weights/best_3000_s_100.pt'.
+            imgsz (int, optional): Image size. Defaults to 1024.
+            tracker_path (str, optional): Path to tracker file. Defaults to 'trackers/bytetrack.yaml'.
+            persist (bool, optional): Defaults to True.
+            verbose (bool, optional): If print result of track to terminal. Defaults to False.
+        """
         self.model = YOLO(weights_path)
         self.persist = persist
         self.imgsz = imgsz
@@ -26,6 +37,15 @@ class YOLOModel:
         self.verbose = verbose
 
     def track(self, source:np.ndarray)-> tuple:
+        """
+        Tracking objects.
+
+        Args:
+            source (np.ndarray): Image on witch tracker works.
+
+        Returns:
+            tuple: List including boxes (xyxy) of tracked objects and list of their ids.
+        """
         results = self.model.track(source=source, persist=self.persist, imgsz=self.imgsz, tracker=self.tracker, verbose=self.verbose)
         boxes = results[0].boxes.xyxy.cpu().numpy().astype(int)
         if (results[0].boxes.id == None):
@@ -34,8 +54,19 @@ class YOLOModel:
             ids = results[0].boxes.id.cpu().numpy().astype(int)
         return boxes, ids
 
+
 class DataHandler:
+    """
+    Class for some data.
+    """
     def __init__(self, metadata_path, pcap_path):
+        """
+        Initialization.
+
+        Args:
+            metadata_path (str): Path to `.json` file.
+            pcap_path (str): Path to `.pcap` file.
+        """
         self.metadata = SensorInfo(open(metadata_path, 'r').read())
         self.pcap_file = pcap.Pcap(pcap_path, self.metadata)
         self.xyz_lut = client.XYZLut(self.metadata)
@@ -46,26 +77,70 @@ class DataHandler:
                    0:["BREAK", (0, 0, 255)]}
     
     def get_metadata(self):
+        """
+        Return `SensorInfo` object.
+
+        Returns:
+            SensorInfo: Metadata.
+        """
         return self.metadata
 
     def get_scans(self):
+        """
+        Return `Scans` object.
+
+        Returns:
+            Scans: Scans.
+        """
         scans = Scans(self.pcap_file)
         return scans
 
     def get_output_dict(self):
+        """
+        Return output dictionary (priority and associated message).
+
+        Returns:
+            dict: output_dict.
+        """
         return self.output_dict
 
     def get_xyz_lut(self):
+        """
+        Return xyz lookup table for transforming to cartesian coordinate system.
+
+        Returns:
+            XYZLut: xyz_lut.
+        """
         return self.xyz_lut
     
     def get_video_params(self):
+        """
+        Return parameters required for saving a video.
+
+        Returns:
+            tuple: fps, image width, image height
+        """
         return self.fps, self.width, self.height
 
+
 class HistoryTracker:
+    """
+    Class for remembering track history.
+    """
     def __init__(self):
+        """
+        Initialization.
+        """
         self.history = defaultdict(lambda: [])
 
     def update_history(self, id, xyz_val):
+        """
+        Appending coordinates of object to track.
+
+        Args:
+            id (int): _description_
+            xyz_val (list): _description_
+        """
         track = self.history[id]
         if len(track) > 0:
             if xyz_val[0] == 0 or xyz_val[1] == 0:
