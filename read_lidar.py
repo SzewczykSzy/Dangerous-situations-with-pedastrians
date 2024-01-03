@@ -151,18 +151,41 @@ class HistoryTracker:
             track.append(xyz_val)
     
     def get_history(self):
+        """Return track history.
+
+        Returns:
+            defaultdict: dict with keys: `id`, values: lists of points.
+        """
         return self.history
 
     def get_track(self, id):
+        """Return object track history.
+
+        Args:
+            id (int): object's id
+
+        Returns:
+            list: list of points
+        """
         return self.history[id]
 
 
 class HistoryTrackerXY:
+    """Class for filtering track
+    """
     def __init__(self):
+        """_summary_
+        """
         self.x = {}
         self.y = {}
 
     def update(self, track, id):
+        """Updating KalamanFilter object, predicting next point. 
+
+        Args:
+            track (list): track of object
+            id (int): object's id
+        """
         value = self.x.get(id)
         if value is None:
             x_0 = track[0][0]
@@ -183,17 +206,48 @@ class HistoryTrackerXY:
         y.update([track[-1][1]])
 
     def get_x_data(self, id):
+        """Return x coordinate value and velocity after filtering
+
+        Args:
+            id (int): object's id
+
+        Returns:
+            KelmanFilter.x (list): predicted values related to x coordinate
+        """
         return self.x[id].x
     
     def get_y_data(self, id):
+        """Return y coordinate value and velocity after filtering
+
+        Args:
+            id (int): object's id
+
+        Returns:
+            KelmanFilter.x (list): predicted values related to y coordinate
+        """
         return self.y[id].x
 
 
 class SingleFrame:
+    """Class for representing single frame of data (scan).
+    """
     def __init__(self, scan):
+        """_summary_
+
+        Args:
+            scan (LidarScan): scan of environment
+        """
         self.sig_field = scan.field(client.ChanField.SIGNAL)
 
     def get_combined_img(self, metadata):
+        """Return combined image of black & white image. It is used to determine the legal dimensions of the detector input.
+
+        Args:
+            metadata (SensorInfo): metadata file
+
+        Returns:
+            np.ndarray: 3D black & white image
+        """
         sig_destaggered = destagger(metadata, self.sig_field)
         scaling_factor = 0.004
         constant = 0.5
@@ -203,15 +257,45 @@ class SingleFrame:
         return combined_img
 
     def get_xyz_destaggered(self, metadata, xyz_lut, scan):
+        """Return destaggered scan
+
+        Args:
+            metadata (SensorInfo): metadata file
+            xyz_lut (XYZLut): lookup table for transformation to cartesian coordinate system
+            scan (LidarScan): single scan of environment
+
+        Returns:
+            np.ndarray: A destaggered numpy array
+        """
         xyz_destaggered = client.destagger(metadata, xyz_lut(scan))
         return xyz_destaggered
 
 
 class VideoProcessor:
-    def __init__(self, metadata):
+    """Class for processing video.
+    """
+    def __init__(self, metadata:SensorInfo):
+        """_summary_
+
+        Args:
+            metadata (SensorInfo): metadata file
+        """
         self.metadata = metadata
 
     def process_video(self, scan:LidarScan, model:YOLOModel, track_history:HistoryTracker, kalman:HistoryTrackerXY, xyz_lut:XYZLut, output_dict:dict, ):
+        """Function processing single scan of data.
+
+        Args:
+            scan (LidarScan): single scan
+            model (YOLOModel): detector
+            track_history (HistoryTracker): track history of all objects 
+            kalman (HistoryTrackerXY): filtered track 
+            xyz_lut (XYZLut): lookup table
+            output_dict (dict): contain priorities and the associated message
+
+        Returns:
+            np.ndarray: image with annotations
+        """
         frame = SingleFrame(scan)
         combined_img = frame.get_combined_img(self.metadata)
         xyz_destaggered = frame.get_xyz_destaggered(self.metadata, xyz_lut, scan)
