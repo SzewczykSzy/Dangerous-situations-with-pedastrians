@@ -32,7 +32,9 @@ Project is created with:
 - Open this repository localy.
 
 - Install all required packages:
-  ```pip install -r requirements.txt```
+  ```bash
+  pip install -r requirements.txt
+  ```
 
 - To run the code write in terminal:
 	```bash
