@@ -1,0 +1,6 @@
+site_name: MkDocs Detect Dangerous Situations
+theme:
+  name: readthedocs
+plugins:
+  - search
+  - mkdocstrings
