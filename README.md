@@ -38,10 +38,10 @@ Project is created with:
 ### Arguments
 There are possible arguments:
 * --weights: path to trained YOLOv8 weights
-* --pcap-path: path to '.pcap' file
-* --metadata-path: path to '.json' file
-* --tracker: path to tracker file '.yaml' with parameters
+* --pcap-path: path to `.pcap` file
+* --metadata-path: path to `.json` file
+* --tracker: path to tracker file `.yaml` with parameters
 * --imgsz: image size
-* --device: calcuation on 'cpu' or gpu (e.g. '0', '1')
-* --save: if want to save result video '1', else '0'
+* --device: calcuation on `cpu` or gpu (e.g. `0`, `1`)
+* --save: if want to save result video `1`, else `0`
 * --save-video-path: path to result video
