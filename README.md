@@ -10,7 +10,10 @@ This project is my thiesis project: "3D point cloud analysis for traffic situati
 
 Result video is shown below:
 
-![Alt Text](https://github.com/SzewczykSzy/Dangerous-situations-with-pedastrians/blob/main/results_mp4/wynik.gif)
+<p align="center">
+  ![Alt Text](https://github.com/SzewczykSzy/Dangerous-situations-with-pedastrians/blob/main/results_mp4/wynik.gif)
+</p>
+
 	
 ## Technologies
 Project is created with:
