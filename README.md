@@ -13,17 +13,15 @@ Result video is shown below:
 <p align="center">
   <img src="results_mp4/wynik.gif" alt="animated" />
 </p>
-
-<p align="center">
-  ![Alt Text](https://github.com/SzewczykSzy/Dangerous-situations-with-pedastrians/blob/main/results_mp4/wynik.gif)
-</p>
-
 	
 ## Technologies
 Project is created with:
-* Lorem version: 12.3
-* Ipsum version: 2.33
-* Ament library version: 999
+* Python: 3.9
+* numpy: 1.25.2
+* opencv-python: 4.8.1.78
+* ouster-sdk: 0.10.0
+* roboflow: 1.1.9
+* ultralytics: 8.0.208
 	
 ## Setup
 To run this project, install it locally using npm:
