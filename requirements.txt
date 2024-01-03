@@ -1,0 +1,6 @@
+numpy==1.25.2
+filterpy==1.4.5
+opencv-python==4.8.1.78
+matplotlib==3.8.1
+ouster-sdk==0.10.0
+ultralytics==8.0.208
