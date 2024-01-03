@@ -31,8 +31,17 @@ Project is created with:
     ```
 - Open this repository localy.
 
-### Usage
 - To run the code write in terminal:
 	```bash
- 	python ./detect_dangerous_situations.py --weights weights/best_3000_s_100.pt --pcap-path ../data/PKR_test1/test4.pcap --metadata-path ../data/PKR_test1/test4.json --tracker ./trackers/bytetrack.yaml --imgsz 1024 --device cpu  --save=0 --save-video-path C:/Users/user/Ouster/Dangerous-situations-with-pedastrians/results_mp4/result.mp4    
+ 	python ./detect_dangerous_situations.py --weights weights/best_3000_s_100.pt --pcap-path ../PATH_TO_PCAP_FILE/sample.pcap --metadata-path ../PATH_TO_JSON_FILE/sample.json --tracker ./trackers/bytetrack.yaml --imgsz 1024 --device cpu --save=0 --save-video-path C:/PATH_TO_REPOSITORY/Dangerous-situations-with-pedastrians/results_mp4/result.mp4    
  	```
+### Arguments
+There are possible arguments:
+* --weights: path to trained YOLOv8 weights
+* --pcap-path: path to '.pcap' file
+* --metadata-path: path to '.json' file
+* --tracker: path to tracker file '.yaml' with parameters
+* --imgsz: image size
+* --device: calcuation on 'cpu' or gpu (e.g. '0', '1')
+* --save: if want to save result video '1', else '0'
+* --save-video-path: path to result video
