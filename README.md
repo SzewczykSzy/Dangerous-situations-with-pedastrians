@@ -11,6 +11,10 @@ This project is my thiesis project: "3D point cloud analysis for traffic situati
 Result video is shown below:
 
 <p align="center">
+  <img src="results_mp4/wynik.gif" alt="animated" />
+</p>
+
+<p align="center">
   ![Alt Text](https://github.com/SzewczykSzy/Dangerous-situations-with-pedastrians/blob/main/results_mp4/wynik.gif)
 </p>
 
