@@ -9,6 +9,7 @@
 This project is my thiesis project: "3D point cloud analysis for traffic situational awareness". Project mainly consist of predicting dangerous situations on the road with pedastrians. Data are provided by Ouster OS1 LiDAR. Needed files to run code: '.pcap', '.json'.
 
 Result video is shown below:
+
 ![Alt Text](https://github.com/SzewczykSzy/Dangerous-situations-with-pedastrians/blob/main/results_mp4/wynik.gif)
 	
 ## Technologies
