@@ -4,6 +4,7 @@ img_sample/
 *.docx
 .venv/
 weights/*
+!weights/best_3000_s_100.pt
 tests/runs/detect/*
 tests/groundtruthing_labels/*
 __pycache__/
