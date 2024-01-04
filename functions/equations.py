@@ -1,4 +1,4 @@
-"""Contain functions returning sth.
+"""Contain functions returning data.
 """
 import numpy as np
 from functions.conditional_algorithm import cond_algorithm
