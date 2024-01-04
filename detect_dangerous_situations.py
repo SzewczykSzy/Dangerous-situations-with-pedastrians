@@ -38,7 +38,7 @@ def run(weights='weights/yolov5s.pt',
         ):
     """
     Args:
-        weights (str, optional): path to trained YOLOv8 weights.
+        weights (str, optional): path to trained YOLOv8 weights file.
         pcap_path (str, optional): path to `.pcap` file.
         metadata_path (str, optional): path to `.json` file.
         tracker (str, optional): path to tracker file `.yaml` with parameters.
