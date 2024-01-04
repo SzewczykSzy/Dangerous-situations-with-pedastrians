@@ -44,7 +44,7 @@ class YOLOModel:
             source (np.ndarray): Image on witch tracker works.
 
         Returns:
-            tuple: List including boxes (xyxy) of tracked objects and list of their ids.
+            (tuple): List including boxes (xyxy) of tracked objects and list of their ids.
         """
         results = self.model.track(source=source, persist=self.persist, imgsz=self.imgsz, tracker=self.tracker, verbose=self.verbose)
         boxes = results[0].boxes.xyxy.cpu().numpy().astype(int)
@@ -81,7 +81,7 @@ class DataHandler:
         Return `SensorInfo` object.
 
         Returns:
-            SensorInfo: Metadata.
+            (SensorInfo): Metadata.
         """
         return self.metadata
 
@@ -90,7 +90,7 @@ class DataHandler:
         Return `Scans` object.
 
         Returns:
-            Scans: Scans.
+            (Scans): Scans.
         """
         scans = Scans(self.pcap_file)
         return scans
@@ -100,7 +100,7 @@ class DataHandler:
         Return output dictionary (priority and associated message).
 
         Returns:
-            dict: output_dict.
+            (dict): output_dict.
         """
         return self.output_dict
 
@@ -109,7 +109,7 @@ class DataHandler:
         Return xyz lookup table for transforming to cartesian coordinate system.
 
         Returns:
-            XYZLut: xyz_lut.
+            (XYZLut): xyz_lut.
         """
         return self.xyz_lut
     
@@ -118,7 +118,7 @@ class DataHandler:
         Return parameters required for saving a video.
 
         Returns:
-            tuple: fps, image width, image height
+            (tuple): fps, image width, image height
         """
         return self.fps, self.width, self.height
 
@@ -154,7 +154,7 @@ class HistoryTracker:
         """Return track history.
 
         Returns:
-            defaultdict: dict with keys: `id`, values: lists of points.
+            (defaultdict): dict with keys: `id`, values: lists of points.
         """
         return self.history
 
@@ -165,7 +165,7 @@ class HistoryTracker:
             id (int): object's id
 
         Returns:
-            list: list of points
+            (list): list of points
         """
         return self.history[id]
 
@@ -212,7 +212,7 @@ class HistoryTrackerXY:
             id (int): object's id
 
         Returns:
-            KelmanFilter.x (list): predicted values related to x coordinate
+            (KelmanFilter.x): predicted values related to x coordinate
         """
         return self.x[id].x
     
@@ -223,7 +223,7 @@ class HistoryTrackerXY:
             id (int): object's id
 
         Returns:
-            KelmanFilter.x (list): predicted values related to y coordinate
+            (KelmanFilter.x): predicted values related to y coordinate
         """
         return self.y[id].x
 
@@ -246,7 +246,7 @@ class SingleFrame:
             metadata (SensorInfo): metadata file
 
         Returns:
-            np.ndarray: 3D black & white image
+            (np.ndarray): 3D black & white image
         """
         sig_destaggered = destagger(metadata, self.sig_field)
         scaling_factor = 0.004
@@ -265,7 +265,7 @@ class SingleFrame:
             scan (LidarScan): single scan of environment
 
         Returns:
-            np.ndarray: A destaggered numpy array
+            (np.ndarray): A destaggered numpy array
         """
         xyz_destaggered = client.destagger(metadata, xyz_lut(scan))
         return xyz_destaggered
@@ -294,7 +294,7 @@ class VideoProcessor:
             output_dict (dict): contain priorities and the associated message
 
         Returns:
-            np.ndarray: image with annotations
+            (np.ndarray): image with annotations
         """
         frame = SingleFrame(scan)
         combined_img = frame.get_combined_img(self.metadata)

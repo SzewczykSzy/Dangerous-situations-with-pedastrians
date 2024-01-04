@@ -1,3 +1,5 @@
+"""Contain functions returning sth.
+"""
 import numpy as np
 from functions.conditional_algorithm import cond_algorithm
 import math

@@ -1,13 +1,3 @@
-"""
-Run dangerous situation detection on pcap file
-
-Usage:
-    'python ./detect_dangerous_situations.py --weights weights/best_3000_s_100.pt 
-    --pcap-path ../data/PKR_test1/test4.pcap --metadata-path ../data/PKR_test1/test4.json 
-    --tracker ./trackers/bytetrack.yaml --imgsz 1024 --device cpu  --save=0 
-    --save-video-path C:/Users/user/Ouster/Dangerous-situations-with-pedastrians/results_mp4/result.mp4'                                                       
-"""
-
 import sys
 import os
 import argparse
@@ -46,7 +36,17 @@ def run(weights='weights/yolov5s.pt',
         save = False,
         save_video_path = ''
         ):
-
+    """
+    Args:
+        weights (str, optional): path to trained YOLOv8 weights.
+        pcap_path (str, optional): path to `.pcap` file.
+        metadata_path (str, optional): path to `.json` file.
+        tracker (str, optional): path to tracker file `.yaml` with parameters.
+        imgsz (int, optional): image size.
+        device (str, optional): calculation on `cpu` or gpu (e.g. `0`, `1`).
+        save (bool, optional): if want to save result video `1`, else `0`.
+        save_video_path (str, optional): path to result video.    
+    """
     yolo_model = YOLOModel(weights, imgsz=imgsz)
     data_handler = DataHandler(metadata_path=metadata_path, pcap_path=pcap_path)
     metadata = data_handler.get_metadata()
