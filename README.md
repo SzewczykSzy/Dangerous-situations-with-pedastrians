@@ -10,7 +10,7 @@
 Here is a documentation of the source code by MkDocs: [Docs](https://szewczykszy.github.io/Dangerous-situations-with-pedastrians/)
 
 ## General info
-This project is my thiesis project: "3D point cloud analysis for traffic situational awareness". Project mainly consist of predicting dangerous situations on the road with pedastrians. Data are provided by Ouster OS1 LiDAR. Needed files to run code: '.pcap', '.json'.
+This project is my thesis project: "3D point cloud analysis for traffic situational awareness". Project mainly consist of predicting dangerous situations on the road with pedastrians. Data are provided by Ouster OS1 LiDAR. Needed files to run code: '.pcap', '.json'.
 
 Result video is shown below:
 
